@@ -1,10 +1,5 @@
 package com.flier268.more_tooltips;
 
-import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import me.shedaniel.autoconfig.AutoConfig;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.minecraft.block.ComposterBlock;
@@ -16,16 +11,15 @@ import net.minecraft.item.FoodComponent;
 import net.minecraft.item.Item;
 import net.minecraft.item.ToolItem;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.tag.ItemTags;
-import net.minecraft.text.BaseText;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
-import net.minecraft.text.TextColor;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
+
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class TooltipEventHandler {
     private static Map<Item, Integer> FuelTimeMap = null;
@@ -94,19 +88,31 @@ public class TooltipEventHandler {
             var clientInstance = MinecraftClient.getInstance();
             int threshold = clientInstance.getWindow().getScaledWidth() / 2;
 
+            // Tooltip - IA ID
+            if (MinecraftClient.getInstance().options.advancedItemTooltips) {
+                NbtCompound nbtData = itemStack.getNbt();
+                if (nbtData != null) {
+                    if(nbtData.contains("itemsadder")) {
+                        NbtCompound ia = nbtData.getCompound("itemsadder");
+                        if(ia.contains("namespace") && ia.contains("id")) {
+                            String itemsAdderNamespacedId = ia.getString("namespace")  + ":" + ia.getString("id");
+                            list.addAll(splitToolTip(clientInstance.textRenderer, itemsAdderNamespacedId, threshold, DARK_GRAY));
+                        }
+                    }
+                }
+            }
+
             // Tooltip - Burn Time
             if (config.BurnTime.isShown(isShiftDown, config.debug)) {
-                if (ItemTags.getTagGroup().getTags().size() > 0) {
-                    if (TooltipEventHandler.FuelTimeMap == null)
-                        TooltipEventHandler.FuelTimeMap = AbstractFurnaceBlockEntity.createFuelTimeMap();
-                    int burnTime = TooltipEventHandler.FuelTimeMap.getOrDefault(item, 0);
-                    if (burnTime > 0) {
-                        String string = new TranslatableText("tooltip.more_tooltips.burnTime")
-                                .append(new LiteralText(" " + decimalFormat.format(burnTime) + " "))
-                                .append(new TranslatableText("tooltip.more_tooltips.burnTime.suffix"))
-                                .getString();
-                        list.addAll(splitToolTip(clientInstance.textRenderer, string, threshold, DARK_GRAY));
-                    }
+                if (TooltipEventHandler.FuelTimeMap == null)
+                    TooltipEventHandler.FuelTimeMap = AbstractFurnaceBlockEntity.createFuelTimeMap();
+                int burnTime = TooltipEventHandler.FuelTimeMap.getOrDefault(item, 0);
+                if (burnTime > 0) {
+                    String string = new TranslatableText("tooltip.more_tooltips.burnTime")
+                            .append(new LiteralText(" " + decimalFormat.format(burnTime) + " "))
+                            .append(new TranslatableText("tooltip.more_tooltips.burnTime.suffix"))
+                            .getString();
+                    list.addAll(splitToolTip(clientInstance.textRenderer, string, threshold, DARK_GRAY));
                 }
             }
 
